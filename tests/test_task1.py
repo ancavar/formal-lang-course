@@ -5,11 +5,14 @@ import pytest
 from project.task1 import get_graph_data, save_labeled_two_cycles_graph, GraphData
 
 
-def test_get_graph_data():
-    expected_node_count = 332
-    expected_edge_count = 269
-    expected_labels = {"a", "d"}
-    graph = get_graph_data("wc")
+@pytest.mark.parametrize(
+    "name, expected_node_count, expected_edge_count, expected_labels",
+    [("wc", 332, 269, {"a", "d"}), ("ls", 1687, 1453, {"a", "d"})],
+)
+def test_get_graph_data(
+    name, expected_node_count, expected_edge_count, expected_labels
+):
+    graph = get_graph_data(name)
 
     assert isinstance(graph, GraphData)
     assert graph.node_count == expected_node_count
