@@ -20,7 +20,7 @@ def test_get_graph_data(
     assert set(graph.labels) == expected_labels
 
 
-EXPECTED_GRAPHS_FOLDER = "expected_graphs"
+EXPECTED_GRAPHS_FOLDER = "tests/test_graphs"
 
 
 @pytest.mark.parametrize(
