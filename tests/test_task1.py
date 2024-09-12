@@ -20,24 +20,31 @@ def test_get_graph_data(
     assert set(graph.labels) == expected_labels
 
 
+EXPECTED_GRAPHS_FOLDER = "expected_graphs"
+
+
 @pytest.mark.parametrize(
-    "n, m, labels",
+    "n, m, labels, dot_filename",
     [
-        (3, 4, ["a", "b"]),
-        (5, 5, ["x", "y"]),
-        (2, 3, ["label1", "label2"]),
+        (3, 4, ["a", "b"], "graph_3_4_ab.dot"),
+        (5, 5, ["x", "y"], "graph_5_5_xy.dot"),
+        (2, 3, ["label1", "label2"], "graph_2_3_label1_label2.dot"),
     ],
 )
-def test_create_labeled_two_cycles_graph(tmp_path, n, m, labels):
-    test_path = tmp_path / ("test.dot")
+def test_create_labeled_two_cycles_graph(tmp_path, n, m, labels, dot_filename):
+    test_path = tmp_path / "test.dot"
 
-    graph = save_labeled_two_cycles_graph(n, m, labels, test_path)
+    save_labeled_two_cycles_graph(n, m, labels, test_path)
 
     assert test_path.exists()
 
-    pydot_graph = pydot.graph_from_dot_file(str(test_path))[0]
-    graph = nx.nx_pydot.from_pydot(pydot_graph)
+    generated_graph = nx.nx_pydot.read_dot(str(test_path))
 
-    assert isinstance(graph, nx.MultiDiGraph)
-    assert graph.number_of_nodes() == n + m + 1
-    assert set(cfpq_data.get_sorted_labels(graph)) == set(labels)
+    expected_graph_path = f"{EXPECTED_GRAPHS_FOLDER}/{dot_filename}"
+    expected_graph = nx.nx_pydot.read_dot(expected_graph_path)
+
+    assert isinstance(generated_graph, nx.MultiDiGraph)
+    assert generated_graph.number_of_nodes() == n + m + 1
+    assert set(cfpq_data.get_sorted_labels(generated_graph)) == set(labels)
+
+    assert nx.is_isomorphic(generated_graph, expected_graph)
