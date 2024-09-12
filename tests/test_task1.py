@@ -1,5 +1,4 @@
 import networkx as nx
-import pydot
 import cfpq_data
 import pytest
 from project.task1 import get_graph_data, save_labeled_two_cycles_graph, GraphData
