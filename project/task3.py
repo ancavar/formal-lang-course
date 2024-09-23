@@ -1,7 +1,12 @@
-from project.task2 import NondeterministicFiniteAutomaton, regex_to_dfa, graph_to_nfa
+from project.task2 import (
+    NondeterministicFiniteAutomaton,
+    regex_to_dfa,
+    graph_to_nfa,
+    State,
+)
 
 from collections import defaultdict
-from typing import Optional, Dict, Set, Any, Iterable
+from typing import Optional, Dict, Set, Iterable
 import numpy as np
 import scipy.sparse as sp
 from networkx import MultiDiGraph
@@ -9,7 +14,7 @@ from networkx import MultiDiGraph
 
 class AdjacencyMatrixFA:
     def __init__(self, automaton: Optional[NondeterministicFiniteAutomaton] = None):
-        self.state_index: Dict[Any, int] = {}
+        self.state_index: Dict[State, int] = {}
         self.start_state_indices: Set[int] = set()
         self.final_state_indices: Set[int] = set()
 
