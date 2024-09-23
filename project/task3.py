@@ -73,7 +73,9 @@ class AdjacencyMatrixFA:
         if not self.transition_matrices:
             return reach
 
-        adjacency_matrix = sp.csr_matrix((self.total_states, self.total_states), dtype=bool)
+        adjacency_matrix = sp.csr_matrix(
+            (self.total_states, self.total_states), dtype=bool
+        )
         for matrix in self.transition_matrices.values():
             adjacency_matrix += matrix
         dist_matrix = sp.csgraph.floyd_warshall(
