@@ -4,11 +4,16 @@ from networkx import MultiDiGraph
 from project.task3 import AdjacencyMatrixFA
 from functools import reduce
 from collections import defaultdict
+from typing import Type
 
 
 def init_front(
-    start_states_r: set[int], start_states_g: set[int], regex_size, graph_size
-) -> sp.csr_matrix:
+    start_states_r: set[int],
+    start_states_g: set[int],
+    regex_size: int,
+    graph_size: int,
+    matrix_class: Type[sp.spmatrix] = sp.csr_matrix,
+) -> sp.spmatrix:
     matrices = []
     for g_start in start_states_g:
         M = sp.lil_matrix((regex_size, graph_size))
@@ -16,13 +21,17 @@ def init_front(
             M[r_start, g_start] = 1
         matrices.append(M)
 
-    final_M = sp.vstack(matrices, format="csr")
+    final_M = sp.vstack(matrices).asformat(matrix_class([[]]).getformat())
 
     return final_M
 
 
 def ms_bfs_based_rpq(
-    regex: str, graph: MultiDiGraph, start_nodes: set[int], final_nodes: set[int]
+    regex: str,
+    graph: MultiDiGraph,
+    start_nodes: set[int],
+    final_nodes: set[int],
+    matrix_class: Type[sp.spmatrix] = sp.csc_matrix,
 ) -> set[tuple[int, int]]:
     regex_adj = AdjacencyMatrixFA(regex_to_dfa(regex))
     graph_adj = AdjacencyMatrixFA(graph_to_nfa(graph, start_nodes, final_nodes))
@@ -43,25 +52,25 @@ def ms_bfs_based_rpq(
         graph_adj.start_state_indices,
         regex_size,
         graph_size,
+        matrix_class,
     )
     visited = front
 
     while True:
-        fronts = defaultdict(lambda: sp.csr_matrix(front.shape, dtype=bool))
+        fronts = defaultdict(lambda: matrix_class(front.shape, dtype=bool))
         for symbol in symbols:
             new_front = front @ graph_adj.transition_matrices[symbol]
             for start in range(len(graph_adj.start_state_indices)):
                 batch = start * regex_size
                 rows, cols = regex_adj.transition_matrices[symbol].nonzero()
-                row_indices = [batch + row for row in rows]
-                col_indices = [batch + col for col in cols]
-                fronts[symbol][col_indices, :] += new_front[row_indices, :]
+                for row_id, col_id in zip(rows, cols):
+                    fronts[symbol][batch + col_id, :] += new_front[batch + row_id, :]
 
         front = reduce(
-            lambda x, y: x + y, fronts.values(), sp.csr_matrix(front.shape, dtype=bool)
+            lambda x, y: x + y, fronts.values(), matrix_class(front.shape, dtype=bool)
         )
         front = front > visited
-        if (front > visited).nnz == 0:
+        if front.nnz == 0:
             break
         visited += front
 
