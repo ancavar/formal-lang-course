@@ -6,17 +6,18 @@ from project.task2 import (
 )
 
 from collections import defaultdict
-from typing import Optional, Dict, Set, Iterable
+from typing import Optional, Dict, Set, Iterable, Type
 import numpy as np
 import scipy.sparse as sp
 from networkx import MultiDiGraph
 
 
 class AdjacencyMatrixFA:
-    def __init__(self, automaton: Optional[NondeterministicFiniteAutomaton] = None):
+    def __init__(self, automaton: Optional[NondeterministicFiniteAutomaton] = None, matrix_class: Type[sp.spmatrix] = sp.csr_matrix):
         self.state_index: Dict[State, int] = {}
         self.start_state_indices: Set[int] = set()
         self.final_state_indices: Set[int] = set()
+        self.matrix_class = matrix_class
 
         if automaton is None:
             self.total_states = 0
@@ -45,7 +46,7 @@ class AdjacencyMatrixFA:
                 ] = True
 
         self.transition_matrices = {
-            sym: sp.csr_matrix(matrix) for sym, matrix in transitions.items()
+            sym: self.matrix_class(matrix) for sym, matrix in transitions.items()
         }
 
     def accepts(self, word: Iterable[str]) -> bool:
@@ -73,7 +74,7 @@ class AdjacencyMatrixFA:
         return True
 
     def transitive_closure(self):
-        reach = sp.csr_matrix((self.total_states, self.total_states), dtype=bool)
+        reach = self.matrix_class((self.total_states, self.total_states), dtype=bool)
         reach.setdiag(True)
 
         if not self.transition_matrices:
@@ -89,13 +90,13 @@ class AdjacencyMatrixFA:
         )
         reach_matrix = dist_matrix < np.inf
 
-        return sp.csr_matrix(reach_matrix)
+        return self.matrix_class(reach_matrix)
 
 
 def intersect_automata(
-    automaton1: AdjacencyMatrixFA, automaton2: AdjacencyMatrixFA
+    automaton1: AdjacencyMatrixFA, automaton2: AdjacencyMatrixFA, matrix_class: Type[sp.spmatrix] = sp.csr_matrix
 ) -> AdjacencyMatrixFA:
-    intersected_automaton = AdjacencyMatrixFA()
+    intersected_automaton = AdjacencyMatrixFA(matrix_class=matrix_class)
 
     intersected_automaton.total_states = (
         automaton1.total_states * automaton2.total_states
@@ -133,18 +134,22 @@ def intersect_automata(
         matrix2 = automaton2.transition_matrices[symbol]
 
         intersected_automaton.transition_matrices[symbol] = sp.kron(
-            matrix1, matrix2, format="csr"
+            matrix1, matrix2, format=matrix_class([[]]).getformat()
         )
 
     return intersected_automaton
 
 
 def tensor_based_rpq(
-    regex: str, graph: MultiDiGraph, start_nodes: set[int], final_nodes: set[int]
+    regex: str,
+    graph: MultiDiGraph,
+    start_nodes: set[int],
+    final_nodes: set[int],
+    matrix_class: Type[sp.spmatrix] = sp.csr_matrix
 ) -> set[tuple[int, int]]:
-    regex_adj = AdjacencyMatrixFA(regex_to_dfa(regex))
-    graph_adj = AdjacencyMatrixFA(graph_to_nfa(graph, start_nodes, final_nodes))
-    intersect = intersect_automata(regex_adj, graph_adj)
+    regex_adj = AdjacencyMatrixFA(regex_to_dfa(regex), matrix_class)
+    graph_adj = AdjacencyMatrixFA(graph_to_nfa(graph, start_nodes, final_nodes), matrix_class)
+    intersect = intersect_automata(regex_adj, graph_adj, matrix_class)
     result_set = set()
     transitive_closure = intersect.transitive_closure()
 
