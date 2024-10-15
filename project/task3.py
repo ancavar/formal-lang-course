@@ -13,7 +13,11 @@ from networkx import MultiDiGraph
 
 
 class AdjacencyMatrixFA:
-    def __init__(self, automaton: Optional[NondeterministicFiniteAutomaton] = None, matrix_class: Type[sp.spmatrix] = sp.csr_matrix):
+    def __init__(
+        self,
+        automaton: Optional[NondeterministicFiniteAutomaton] = None,
+        matrix_class: Type[sp.spmatrix] = sp.csr_matrix,
+    ):
         self.state_index: Dict[State, int] = {}
         self.start_state_indices: Set[int] = set()
         self.final_state_indices: Set[int] = set()
@@ -94,7 +98,9 @@ class AdjacencyMatrixFA:
 
 
 def intersect_automata(
-    automaton1: AdjacencyMatrixFA, automaton2: AdjacencyMatrixFA, matrix_class: Type[sp.spmatrix] = sp.csr_matrix
+    automaton1: AdjacencyMatrixFA,
+    automaton2: AdjacencyMatrixFA,
+    matrix_class: Type[sp.spmatrix] = sp.csr_matrix,
 ) -> AdjacencyMatrixFA:
     intersected_automaton = AdjacencyMatrixFA(matrix_class=matrix_class)
 
@@ -145,10 +151,12 @@ def tensor_based_rpq(
     graph: MultiDiGraph,
     start_nodes: set[int],
     final_nodes: set[int],
-    matrix_class: Type[sp.spmatrix] = sp.csr_matrix
+    matrix_class: Type[sp.spmatrix] = sp.csr_matrix,
 ) -> set[tuple[int, int]]:
     regex_adj = AdjacencyMatrixFA(regex_to_dfa(regex), matrix_class)
-    graph_adj = AdjacencyMatrixFA(graph_to_nfa(graph, start_nodes, final_nodes), matrix_class)
+    graph_adj = AdjacencyMatrixFA(
+        graph_to_nfa(graph, start_nodes, final_nodes), matrix_class
+    )
     intersect = intersect_automata(regex_adj, graph_adj, matrix_class)
     result_set = set()
     transitive_closure = intersect.transitive_closure()

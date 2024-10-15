@@ -6,12 +6,13 @@ from functools import reduce
 from collections import defaultdict
 from typing import Type
 
+
 def init_front(
     start_states_r: set[int],
     start_states_g: set[int],
     regex_size: int,
     graph_size: int,
-    matrix_class: Type[sp.spmatrix] = sp.csr_matrix
+    matrix_class: Type[sp.spmatrix] = sp.csr_matrix,
 ) -> sp.spmatrix:
     matrices = []
     for g_start in start_states_g:
@@ -30,7 +31,7 @@ def ms_bfs_based_rpq(
     graph: MultiDiGraph,
     start_nodes: set[int],
     final_nodes: set[int],
-    matrix_class: Type[sp.spmatrix] = sp.csc_matrix
+    matrix_class: Type[sp.spmatrix] = sp.csc_matrix,
 ) -> set[tuple[int, int]]:
     regex_adj = AdjacencyMatrixFA(regex_to_dfa(regex))
     graph_adj = AdjacencyMatrixFA(graph_to_nfa(graph, start_nodes, final_nodes))
@@ -51,7 +52,7 @@ def ms_bfs_based_rpq(
         graph_adj.start_state_indices,
         regex_size,
         graph_size,
-        matrix_class
+        matrix_class,
     )
     visited = front
 
