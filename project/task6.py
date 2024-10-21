@@ -17,6 +17,24 @@ def cfg_to_weak_normal_form(cfg: CFG) -> CFG:
     return CFG(start_symbol=cfg.start_symbol, productions=set(new_productions))
 
 
+def _initialize_relation(weak_cnf_cfg, graph):
+    r = []
+
+    # A -> terminal
+    for v1, v2, symbol in graph.edges(data="label"):
+        for production in weak_cnf_cfg.productions:
+            if len(production.body) == 1 and production.body[0].value == symbol:
+                r.append((production.head, v1, v2))
+
+    # A -> epsilon
+    for variable in weak_cnf_cfg.variables:
+        if Production(variable, []) in weak_cnf_cfg.productions:
+            for vertex in graph.nodes:
+                r.append((variable, vertex, vertex))
+
+    return r
+
+
 def hellings_based_cfpq(
     cfg: CFG,
     graph: nx.DiGraph,
@@ -25,22 +43,8 @@ def hellings_based_cfpq(
 ) -> set[tuple[int, int]]:
     weak_cnf_cfg = cfg_to_weak_normal_form(cfg)
 
-    r = list()
-    new = list()
-
-    for v1, v2, symbol in graph.edges(data="label"):
-        for production in weak_cnf_cfg.productions:
-            # A -> terminal
-            if len(production.body) == 1 and production.body[0].value == symbol:
-                r.append((production.head, v1, v2))
-                new.append((production.head, v1, v2))
-
-    # A -> epsilon
-    for variable in weak_cnf_cfg.variables:
-        if Production(variable, []) in weak_cnf_cfg.productions:
-            for vertex in graph.nodes:
-                r.append((variable, vertex, vertex))
-                new.append((variable, vertex, vertex))
+    r = _initialize_relation(weak_cnf_cfg, graph)
+    new = r.copy()
 
     while new:
         (N, n, m) = new.pop()
@@ -55,7 +59,7 @@ def hellings_based_cfpq(
                         and production.body[1] == N
                     ):
                         N_prime = production.head
-                        new_relation = (production.head, n_prime, m)
+                        new_relation = (N_prime, n_prime, m)
                         if new_relation not in r:
                             r.append(new_relation)
                             new.append(new_relation)
