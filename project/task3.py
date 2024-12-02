@@ -22,10 +22,12 @@ class AdjacencyMatrixFA:
         self.start_state_indices: Set[int] = set()
         self.final_state_indices: Set[int] = set()
         self.matrix_class = matrix_class
+        self.total_states = 0
+        self.state_index = {}
+        self.index_state = {}
+        self.transition_matrices: Dict[str, sp.csr_matrix] = {}
 
         if automaton is None:
-            self.total_states = 0
-            self.transition_matrices: Dict[str, sp.csr_matrix] = {}
             return
 
         graph = automaton.to_networkx()
@@ -115,6 +117,10 @@ def intersect_automata(
         )
         for s1 in automaton1.state_index
         for s2 in automaton2.state_index
+    }
+
+    intersected_automaton.index_state = {
+        idx: state for state, idx in intersected_automaton.state_index.items()
     }
 
     intersected_automaton.start_state_indices = {
