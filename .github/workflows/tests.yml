@@ -24,5 +24,8 @@ jobs:
       - name: Sync dependencies
         run: rye sync
 
+      - name: Generate ANTLR4 lexer and parser
+        run: rye run antlr4 -Dlanguage=Python3 project/task11/GraphLang.g4
+
       - name: Run tests
         run: python scripts/run_tests.py
